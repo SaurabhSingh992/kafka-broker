@@ -18,15 +18,19 @@ public class TopicConfig {
         this.partitionCount = partitionCount;
     }
 
-    public Integer getReplicaCount() {
-        return replicaCount;
-    }
 
-    public void setReplicaCount(Integer replicaCount) {
-        this.replicaCount = replicaCount;
-    }
+
 
     private String topicName;
     private Integer partitionCount;
-    private Integer replicaCount;
+
+    public Short getReplicaCount() {
+        return replicaCount;
+    }
+
+    public void setReplicaCount(Short replicaCount) {
+        this.replicaCount = replicaCount;
+    }
+
+    private Short replicaCount;
 }

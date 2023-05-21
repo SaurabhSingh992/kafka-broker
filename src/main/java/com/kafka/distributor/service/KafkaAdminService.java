@@ -1,16 +1,12 @@
 package com.kafka.distributor.service;
 
 import com.kafka.distributor.common.TopicConfig;
-import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.PartitionInfo;
-import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.config.TopicBuilder;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -20,17 +16,22 @@ public class KafkaAdminService {
 
     private final ConcurrentKafkaListenerContainerFactory<String, String> concurrentKafkaListenerContainerFactory;
 
+    @Autowired
+    KafkaAdmin kafkaAdmin;
+
 
     public KafkaAdminService(ConcurrentKafkaListenerContainerFactory<String, String> concurrentKafkaListenerContainerFactory){
         this.concurrentKafkaListenerContainerFactory= concurrentKafkaListenerContainerFactory;
     }
 
-    public NewTopic createTopic(String name, Integer partition, Integer replicas){
-        NewTopic newTopic= TopicBuilder.name(name)
-                .partitions(partition)
-                .replicas(replicas)
-                .build();
-        return newTopic;
+    public String createTopic(String name, Integer partition, Short replicas, Map<String, String> topicconfig){
+        Map<String, Object> configmap= concurrentKafkaListenerContainerFactory.getConsumerFactory().getConfigurationProperties();
+        NewTopic topic=new NewTopic(name,partition,replicas);
+        if(topicconfig != null){
+            topic.configs(topicconfig);
+        }
+        kafkaAdmin.createOrModifyTopics(topic);
+        return "topic created"+ name;
     }
 
     public List<TopicConfig>  listTopic(){
@@ -44,7 +45,7 @@ public class KafkaAdminService {
             TopicConfig topicConfig= new TopicConfig();
             topicConfig.setTopicName(topicName);
             topicConfig.setPartitionCount(topics.get(topicName).size());
-            topicConfig.setReplicaCount(topics.get(topicName).get(0).replicas().length);
+            topicConfig.setReplicaCount((short) topics.get(topicName).get(0).replicas().length);
             topicList.add(topicConfig);
         }
         return topicList;
